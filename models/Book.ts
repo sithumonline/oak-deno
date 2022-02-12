@@ -1,4 +1,3 @@
-// const mongoose = require('mongoose');
 import { Bson } from "https://deno.land/x/mongo@v0.29.1/mod.ts";
 import { connectDB } from "../config/db.js";
 
