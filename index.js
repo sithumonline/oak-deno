@@ -1,5 +1,4 @@
 // index.js
-// import "https://deno.land/x/dotenv@v3.2.0/load.ts";
 import { Application, Router } from "https://deno.land/x/oak@v10.2.0/mod.ts";
 import { bookRouter } from "./routes/api/books.js";
 import { CORS } from "https://deno.land/x/oak_cors@v0.1.0/mod.ts";
