@@ -17,4 +17,4 @@ export const createBookTable = async () => {
   } catch (error) {
     console.log(error);
   }
-}
+};

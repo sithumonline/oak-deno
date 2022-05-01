@@ -9,7 +9,7 @@ app.use(CORS());
 const router = new Router().use(
   "/api/books",
   bookRouter.routes(),
-  bookRouter.allowedMethods()
+  bookRouter.allowedMethods(),
 );
 
 const port = Deno.env.get("PORT") || 8082;
