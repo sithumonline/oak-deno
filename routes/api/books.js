@@ -88,9 +88,9 @@ bookRouter.put("/:id", async (ctx) => {
     const { error } = joi
       .object({
         id: joi.string().guid().required(),
-        title: joi.string().required(),
-        author: joi.string().required(),
-        description: joi.string().required(),
+        title: joi.string().optional(),
+        author: joi.string().optional(),
+        description: joi.string().optional(),
       })
       .validate({ id, ...data });
     if (error) {
@@ -98,11 +98,20 @@ bookRouter.put("/:id", async (ctx) => {
       ctx.response.body = { msg: error.message };
       return;
     }
+    let queryString = "UPDATE book SET ";
+    const queryArgs = {};
+    Object.keys(data).forEach((key) => {
+      if (data[key]) {
+        queryString += `${key} = $${key}, `;
+        queryArgs[key] = data[key];
+      }
+    });
+    queryString += "updated_date = $updated_date WHERE id = $id";
+    console.log(queryString);
     const out = await query({
-      text:
-        "UPDATE book SET title = $title, author = $author, description = $description, updated_date = $updated_date WHERE id = $id",
+      text: queryString,
       args: {
-        ...data,
+        ...queryArgs,
         id: id,
         updated_date: new Date(),
       },
