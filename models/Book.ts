@@ -1,15 +1,20 @@
-import { Bson } from "https://deno.land/x/mongo@v0.29.1/mod.ts";
-import { connectDB } from "../config/db.js";
+import { query } from "../config/db.js";
 
-interface BookSchema {
-  _id: Bson.ObjectId;
-  title: string;
-  author: String;
-  description: String;
-  updated_date: Date;
+export const createBookTable = async () => {
+  const sql = `
+    SELECT gen_random_uuid();
+    CREATE TABLE IF NOT EXISTS book (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      title TEXT,
+      author TEXT,
+      description TEXT,
+      updated_date TEXT
+    );
+  `;
+  try {
+    const result = await query(sql);
+    console.log(result.rows);
+  } catch (error) {
+    console.log(error);
+  }
 }
-
-const client = await connectDB();
-
-const db = client.database("T");
-export const Book = db.collection<BookSchema>("book");

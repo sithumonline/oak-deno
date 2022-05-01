@@ -1,11 +1,16 @@
-import { MongoClient } from "https://deno.land/x/mongo@v0.29.1/mod.ts";
-import "https://deno.land/x/dotenv@v3.2.0/load.ts";
+import { Pool } from "https://deno.land/x/postgres@v0.15.0/mod.ts";
 
-export const connectDB = async () => {
-  const mongoose = new MongoClient();
-  await mongoose.connect(Deno.env.get("MONGODB_URI")).catch((err) => {
-    console.log(err);
-  });
+const databaseUrl = Deno.env.get("DATABASE_URL");
 
-  return mongoose;
+if (!databaseUrl) {
+  throw new Error("DATABASE_URL is not set");
+}
+
+const pool = new Pool(databaseUrl, 3, true);
+
+export const query = async (query) => {
+  const client = await pool.connect();
+  const result = await client.queryObject(query);
+  client.release();
+  return result;
 };

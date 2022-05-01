@@ -1,8 +1,6 @@
 import { Router } from "https://deno.land/x/oak/mod.ts";
-import { Bson } from "https://deno.land/x/mongo@v0.29.1/mod.ts";
 export const bookRouter = new Router();
-// Load Book model
-import { Book } from "../../models/Book.ts";
+import { query } from "../../config/db.js";
 
 // @route GET api/books/test
 // @description tests books route
@@ -15,8 +13,8 @@ bookRouter.get("/test", (ctx) => {
 // @description Get all books
 // @access Public
 bookRouter.get("/", async (ctx) => {
-  const data = await Book.find({}).toArray();
-  ctx.response.body = { msg: data ? data : "No Books found" };
+  const data = await query("SELECT * FROM book");
+  ctx.response.body = { msg: data ? data.rows : "No Books found" };
   ctx.response.status = data ? 200 : 404;
 });
 
@@ -24,9 +22,14 @@ bookRouter.get("/", async (ctx) => {
 // @description Get single book by id
 // @access Public
 bookRouter.get("/:id", async (ctx) => {
-  const id = new Bson.ObjectId(ctx.params.id);
-  const data = await Book.findOne({ _id: id });
-  ctx.response.body = { msg: data ? data : "No Book found" };
+  const id = ctx.params.id;
+  const data = await query({
+    text: "SELECT * FROM book WHERE id = $id",
+    args: {
+      id: id,
+    }
+  });
+  ctx.response.body = { msg: data ? data.rows : "No Book found" };
   ctx.response.status = data ? 200 : 404;
 });
 
@@ -37,9 +40,15 @@ bookRouter.post("/", async (ctx) => {
   if (ctx.request.hasBody) {
     const body = await ctx.request.body();
     const data = await body.value;
-    const out = await Book.insertOne(data);
+    const out = await query({
+      text: "INSERT INTO book (title, author, description, updated_date) VALUES ($title, $author, $description, $updated_date)",
+      args: {
+        ...data,
+        updated_date: new Date(),
+      },
+    });
     ctx.response.status = 201;
-    ctx.response.body = { msg: out ? out : "Book not added" };
+    ctx.response.body = { msg: out ? out.rows : "Book not added" };
   } else {
     ctx.response.status = 400;
     ctx.response.body = { msg: "No data found" };
@@ -51,25 +60,19 @@ bookRouter.post("/", async (ctx) => {
 // @access Public
 bookRouter.put("/:id", async (ctx) => {
   if (ctx.request.hasBody) {
-    const id = new Bson.ObjectId(ctx.params.id);
+    const id = ctx.params.id;
     const body = await ctx.request.body();
     const data = await body.value;
-    const out = await Book.updateOne(
-      { _id: id },
-      {
-        $set: {
-          title: data.title,
-          author: data.author,
-          description: data.description,
-          updated_date: Date.now(),
-        },
-      }
-    );
+    const out = await query({
+      text: "UPDATE book SET title = $title, author = $author, description = $description, updated_date = $updated_date WHERE id = $id",
+      args: {
+        ...data,
+        id: id,
+        updated_date: new Date(),
+      },
+    });
     ctx.response.status = 201;
-    ctx.response.body = { msg: out ? out : "Book not updated˝" };
-  } else {
-    ctx.response.status = 400;
-    ctx.response.body = { msg: "No data found" };
+    ctx.response.body = { msg: out ? out.rows : "Book not updated" };
   }
 });
 
@@ -77,8 +80,13 @@ bookRouter.put("/:id", async (ctx) => {
 // @description Delete book by id
 // @access Public
 bookRouter.delete("/:id", async (ctx) => {
-  const id = new Bson.ObjectId(ctx.params.id);
-  const out = await Book.deleteOne({ _id: id });
-  ctx.response.body = { msg: out ? out : "Book not deleted" };
+  const id = ctx.params.id;
+  const out = await query({
+    text: "DELETE FROM book WHERE id = $id",
+    args: {
+      id: id,
+    },
+  });
+  ctx.response.body = { msg: out ? out.rows : "Book not deleted" };
   ctx.response.status = out ? 200 : 404;
 });
