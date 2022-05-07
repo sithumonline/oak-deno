@@ -45,7 +45,7 @@ bookRouter.get("/:id", async (ctx) => {
 // @route GET api/books
 // @description add/save book
 // @access Public
-bookRouter.post("/", async (ctx) => {
+bookRouter.post("/", async (ctx, next) => {
   const body = await ctx.request.body();
   const data = await body.value;
   const { error } = joi
@@ -60,6 +60,10 @@ bookRouter.post("/", async (ctx) => {
     ctx.response.body = { msg: error.message };
     return;
   }
+  await next();
+}, async (ctx) => {
+  const body = await ctx.request.body();
+  const data = await body.value;
   if (ctx.request.hasBody) {
     const out = await query({
       text:
